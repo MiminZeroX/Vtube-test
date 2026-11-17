@@ -30,3 +30,18 @@ python -m venv .venv && .venv/bin/pip install -r cat/requirements.txt
 - กระดูก (rig) และ blendshape สำหรับกะพริบตา/ขยับปาก
 - ส่งออก `.vrm`
 - retopology: ตัวขนเป็น mesh จาก voxel remesh ประมาณ 110k quads
+
+---
+
+## PNGTuber แมว 2D (`pngtuber/`)
+
+![pngtuber](pngtuber/out/preview.png)
+
+ตัวละครจิบิหูแมว 2D ออกแบบเอง มี 4 ท่า (ตาเปิด/ปิด × ปากเปิด/ปิด) พื้นหลังโปร่งใส 2000×2000
+
+| ไฟล์ | ใช้ทำอะไร |
+|---|---|
+| `pngtuber/out/idle.png`, `talk.png`, `blink.png`, `blink_talk.png` | ใส่ในโปรแกรม PNGTuber เช่น Veadotube mini |
+| `pngtuber/out/*.svg` | ไฟล์เวกเตอร์ แก้ต่อใน Inkscape / Illustrator ได้ |
+| `pngtuber/index.html` | หน้าทดลอง: ปากขยับตามเสียงไมค์ กะพริบตาเอง (กด Space ค้างแทนไมค์ได้) |
+| `pngtuber/build.js` | สคริปต์วาด แก้สีที่ตัวแปร `C` แล้วรัน `node pngtuber/build.js` |

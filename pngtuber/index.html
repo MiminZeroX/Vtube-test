@@ -1,0 +1,58 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Cat PNGTuber</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #00ff00; overflow: hidden; font-family: sans-serif; }
+  body.transparent { background: transparent; }
+  #stage { position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: center; }
+  #stage img { height: 96vh; position: absolute; bottom: 0; visibility: hidden; transition: transform .08s; }
+  #stage img.on { visibility: visible; }
+  #stage.talking img { transform: translateY(-1.5vh); }
+  #ui { position: absolute; top: 8px; left: 8px; background: #fff; padding: 8px 12px; border-radius: 8px; font-size: 14px; }
+  #ui:not(:hover) { opacity: .25; }
+</style>
+<div id="stage">
+  <img id="idle" src="out/idle.png" class="on"><img id="talk" src="out/talk.png">
+  <img id="blink" src="out/blink.png"><img id="blink_talk" src="out/blink_talk.png">
+</div>
+<div id="ui">
+  <button id="start">เปิดไมค์</button>
+  ความไว <input id="thr" type="range" min="1" max="60" value="12">
+  <label><input id="bg" type="checkbox"> พื้นหลังโปร่งใส</label>
+  <span id="hint">(หรือกด Space ค้างเพื่อพูด)</span>
+</div>
+<script>
+  // Shows one of four PNGs: mouth follows microphone volume, eyes blink at random.
+  let talking = false, blinking = false, keyDown = false;
+  const stage = document.getElementById('stage');
+  function show() {
+    const name = (blinking ? 'blink' : '') + (talking ? (blinking ? '_talk' : 'talk') : (blinking ? '' : 'idle'));
+    for (const img of stage.children) img.classList.toggle('on', img.id === name);
+    stage.classList.toggle('talking', talking);
+  }
+  (function blinkLoop() {
+    setTimeout(() => { blinking = true; show(); setTimeout(() => { blinking = false; show(); blinkLoop(); }, 140); },
+      2000 + Math.random() * 4000);
+  })();
+  addEventListener('keydown', e => { if (e.code === 'Space') { keyDown = true; talking = true; show(); e.preventDefault(); } });
+  addEventListener('keyup', e => { if (e.code === 'Space') { keyDown = false; talking = false; show(); } });
+  document.getElementById('bg').onchange = e => document.body.classList.toggle('transparent', e.target.checked);
+  document.getElementById('start').onclick = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const ctx = new AudioContext(), an = ctx.createAnalyser();
+    an.fftSize = 512;
+    ctx.createMediaStreamSource(stream).connect(an);
+    const buf = new Uint8Array(an.fftSize);
+    let hold = 0;
+    setInterval(() => {
+      an.getByteTimeDomainData(buf);
+      let sum = 0;
+      for (const v of buf) sum += (v - 128) ** 2;
+      const level = Math.sqrt(sum / buf.length);
+      if (level > document.getElementById('thr').value / 4) hold = 4; else hold--;
+      const t = hold > 0 || keyDown;
+      if (t !== talking) { talking = t; show(); }
+    }, 40);
+    document.getElementById('start').textContent = 'ไมค์เปิดอยู่';
+  };
+</script>
